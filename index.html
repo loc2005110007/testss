@@ -5,10 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Web Ghi Chú</title>
   <style>
+    :root {
+      --primary: #0070f3;
+      --primary-dark: #005bb5;
+      --background: #f8fafc;
+      --foreground: #22223b;
+      --notebg: #fff;
+      --notehighlight: #e0f2fe;
+      --shadow: #bde0fe60;
+      --border: #bde0fe;
+      --delete: #ff4d4f;
+      --delete-hover: #b71c1c;
+    }
     body {
       font-family: Arial, sans-serif;
-      background: #f8fafc;
-      color: #22223b;
+      background: var(--background);
+      color: var(--foreground);
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
@@ -16,18 +28,36 @@
       min-height: 100vh;
       margin: 0;
       padding-top: 40px;
+      transition: background .2s, color .2s;
     }
     h1 {
       font-size: 2.5rem;
-      color: #0070f3;
+      color: var(--primary);
       text-shadow: 1px 1px 8px #bde0fe;
       margin-bottom: 20px;
       text-align: center;
     }
+    .toggle-dark {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background .2s;
+      font-size: 1rem;
+      z-index: 10;
+    }
+    .toggle-dark:hover {
+      background: var(--primary-dark);
+    }
     .note-container {
-      background: #fff;
+      background: var(--notebg);
       border-radius: 12px;
-      box-shadow: 0 2px 8px #bde0fe60;
+      box-shadow: 0 2px 8px var(--shadow);
       padding: 6vw 5vw;
       width: 100%;
       max-width: 400px;
@@ -36,24 +66,27 @@
       flex-direction: column;
       gap: 16px;
       box-sizing: border-box;
+      transition: background .2s;
     }
     textarea {
       width: 100%;
       min-height: 80px;
-      border: 1px solid #bde0fe;
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px;
       font-size: 1rem;
       resize: vertical;
       outline: none;
-      transition: border-color .2s;
+      transition: border-color .2s, background .2s, color .2s;
       box-sizing: border-box;
+      background: inherit;
+      color: inherit;
     }
     textarea:focus {
-      border-color: #0070f3;
+      border-color: var(--primary);
     }
     button {
-      background: #0070f3;
+      background: var(--primary);
       color: #fff;
       border: none;
       border-radius: 6px;
@@ -63,7 +96,7 @@
       transition: background .2s;
     }
     button:hover {
-      background: #005bb5;
+      background: var(--primary-dark);
     }
     ul.notes-list {
       list-style: none;
@@ -74,7 +107,7 @@
       font-size: 1rem;
     }
     ul.notes-list li {
-      background: #e0f2fe;
+      background: var(--notehighlight);
       margin-bottom: 8px;
       border-radius: 6px;
       padding: 8px 12px;
@@ -83,7 +116,7 @@
       justify-content: space-between;
       align-items: flex-start;
       word-break: break-word;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s;
       font-size: 1rem;
     }
     ul.notes-list li:last-child {
@@ -92,7 +125,7 @@
     .delete-btn {
       background: transparent;
       border: none;
-      color: #ff4d4f;
+      color: var(--delete);
       font-size: 1.2rem;
       cursor: pointer;
       padding: 0 8px;
@@ -100,10 +133,8 @@
       transition: color .2s;
     }
     .delete-btn:hover {
-      color: #b71c1c;
+      color: var(--delete-hover);
     }
-
-    /* Responsive cho mobile */
     @media (max-width: 600px) {
       .note-container {
         max-width: 98vw;
@@ -119,14 +150,34 @@
       ul.notes-list li {
         font-size: 0.96rem;
       }
-      button {
+      button, .toggle-dark {
         font-size: 1rem;
         padding: 10px 0;
       }
     }
+
+    /* Dark mode styles */
+    body.dark {
+      --background: #181926;
+      --foreground: #eef1f6;
+      --notebg: #23243a;
+      --notehighlight: #2b2d47;
+      --shadow: #22223b99;
+      --border: #334155;
+      --primary: #93c5fd;
+      --primary-dark: #60a5fa;
+      --delete: #fb7185;
+      --delete-hover: #be123c;
+      transition: background .2s, color .2s;
+    }
+    body.dark h1 {
+      color: var(--primary);
+      text-shadow: 1px 1px 8px #334155;
+    }
   </style>
 </head>
 <body>
+  <button class="toggle-dark" id="toggleDark">🌙 Chế độ tối</button>
   <h1>Web Ghi Chú</h1>
   <div class="note-container">
     <textarea id="noteInput" placeholder="Nhập ghi chú..."></textarea>
@@ -170,12 +221,33 @@
       renderNotes();
     }
 
-    // Cho phép Enter + Ctrl hoặc Enter + Cmd để thêm ghi chú nhanh
     document.getElementById('noteInput').addEventListener('keydown', function(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         addNote();
       }
     });
+
+    // Dark mode feature
+    const darkBtn = document.getElementById('toggleDark');
+    const DARK_KEY = "note-dark";
+    function setDarkMode(on) {
+      if (on) {
+        document.body.classList.add('dark');
+        darkBtn.textContent = '☀️ Chế độ sáng';
+        localStorage.setItem(DARK_KEY, "1");
+      } else {
+        document.body.classList.remove('dark');
+        darkBtn.textContent = '🌙 Chế độ tối';
+        localStorage.setItem(DARK_KEY, "0");
+      }
+    }
+    darkBtn.onclick = () => setDarkMode(!document.body.classList.contains('dark'));
+    // Auto-load dark mode if saved
+    if (localStorage.getItem(DARK_KEY) === "1" ||
+      (localStorage.getItem(DARK_KEY) === null && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    ) {
+      setDarkMode(true);
+    }
 
     // Hiển thị ghi chú khi tải trang
     renderNotes();
