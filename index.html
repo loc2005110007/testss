@@ -135,6 +135,85 @@
     .delete-btn:hover {
       color: var(--delete-hover);
     }
+    /* LOGIN MODAL */
+    .modal-bg {
+      position: fixed;
+      background: rgba(0,0,0,0.18);
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal {
+      background: var(--notebg);
+      color: var(--foreground);
+      border-radius: 12px;
+      box-shadow: 0 2px 16px var(--shadow);
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      min-width: 300px;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      animation: fadein .3s;
+    }
+    @keyframes fadein { from {opacity:0; transform:scale(0.8);} to {opacity:1; transform:scale(1);} }
+    .modal label {
+      font-weight: bold;
+      margin-bottom: 0.2em;
+    }
+    .modal input[type="text"], .modal input[type="password"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+      margin-bottom: 0.7em;
+      background: inherit;
+      color: inherit;
+      transition: border-color .2s;
+    }
+    .modal input[type="text"]:focus, .modal input[type="password"]:focus {
+      border-color: var(--primary);
+    }
+    .modal .login-btn {
+      width: 100%;
+      margin-top: 6px;
+    }
+    .modal .login-error {
+      color: #e11d48;
+      font-size: 0.98em;
+      margin-top: -0.6em;
+    }
+    .logout-btn {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      background: var(--primary-dark);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background .2s;
+      font-size: 1rem;
+      z-index: 10;
+    }
+    .logout-btn:hover {
+      background: var(--primary);
+    }
+    .user-greeting {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.1rem;
+      color: var(--primary-dark);
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      z-index: 10;
+    }
     @media (max-width: 600px) {
       .note-container {
         max-width: 98vw;
@@ -150,12 +229,13 @@
       ul.notes-list li {
         font-size: 0.96rem;
       }
-      button, .toggle-dark {
+      button, .toggle-dark, .logout-btn {
         font-size: 1rem;
         padding: 10px 0;
       }
+      .modal { min-width: 0; }
+      .user-greeting { font-size: 1rem; }
     }
-
     /* Dark mode styles */
     body.dark {
       --background: #181926;
@@ -178,16 +258,42 @@
 </head>
 <body>
   <button class="toggle-dark" id="toggleDark">🌙 Chế độ tối</button>
+  <button class="logout-btn" id="logoutBtn" style="display:none;">Đăng xuất</button>
+  <div class="user-greeting" id="userGreeting" style="display:none;"></div>
   <h1>Web Ghi Chú</h1>
-  <div class="note-container">
+  <div class="note-container" id="noteSection" style="display:none;">
     <textarea id="noteInput" placeholder="Nhập ghi chú..."></textarea>
     <button onclick="addNote()">Thêm ghi chú</button>
     <ul id="notesList" class="notes-list"></ul>
   </div>
+  <!-- Login Modal -->
+  <div class="modal-bg" id="loginModalBg">
+    <form class="modal" id="loginForm" autocomplete="off" onsubmit="return false;">
+      <div style="text-align:center;">
+        <b>Đăng nhập để sử dụng ghi chú</b>
+      </div>
+      <div>
+        <label for="loginUser">Tên đăng nhập</label>
+        <input type="text" id="loginUser" autocomplete="username" required placeholder="Nhập tên đăng nhập" />
+      </div>
+      <div>
+        <label for="loginPass">Mật khẩu</label>
+        <input type="password" id="loginPass" autocomplete="current-password" required placeholder="Mật khẩu" />
+      </div>
+      <button class="login-btn" id="loginBtn">Đăng nhập</button>
+      <div class="login-error" id="loginError" style="display:none;"></div>
+    </form>
+  </div>
   <script>
-    // Lưu và tải ghi chú từ localStorage
-    let notes = JSON.parse(localStorage.getItem('notes') || '[]');
-
+    // Simple "account": username: admin, password: 123456
+    const DEMO_ACCOUNT = { username: "admin", password: "123456" };
+    const LOGIN_KEY = "note-login-user";
+    // Lưu và tải ghi chú từ localStorage, key theo tài khoản
+    function notesKey() {
+      const user = localStorage.getItem(LOGIN_KEY) || "";
+      return "notes-" + user;
+    }
+    let notes = [];
     function renderNotes() {
       const notesList = document.getElementById('notesList');
       notesList.innerHTML = '';
@@ -203,30 +309,26 @@
         notesList.appendChild(li);
       });
     }
-
     function addNote() {
       const noteInput = document.getElementById('noteInput');
       const note = noteInput.value.trim();
       if (note) {
         notes.unshift(note);
-        localStorage.setItem('notes', JSON.stringify(notes));
+        localStorage.setItem(notesKey(), JSON.stringify(notes));
         renderNotes();
         noteInput.value = '';
       }
     }
-
     function deleteNote(index) {
       notes.splice(index, 1);
-      localStorage.setItem('notes', JSON.stringify(notes));
+      localStorage.setItem(notesKey(), JSON.stringify(notes));
       renderNotes();
     }
-
     document.getElementById('noteInput').addEventListener('keydown', function(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         addNote();
       }
     });
-
     // Dark mode feature
     const darkBtn = document.getElementById('toggleDark');
     const DARK_KEY = "note-dark";
@@ -242,15 +344,71 @@
       }
     }
     darkBtn.onclick = () => setDarkMode(!document.body.classList.contains('dark'));
-    // Auto-load dark mode if saved
-    if (localStorage.getItem(DARK_KEY) === "1" ||
-      (localStorage.getItem(DARK_KEY) === null && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    if (localStorage.getItem(DARK_KEY) === "1"
+        || (localStorage.getItem(DARK_KEY) === null && window.matchMedia('(prefers-color-scheme: dark)').matches)
     ) {
       setDarkMode(true);
     }
-
-    // Hiển thị ghi chú khi tải trang
-    renderNotes();
+    // LOGIN LOGIC
+    const loginModalBg = document.getElementById("loginModalBg");
+    const loginForm = document.getElementById("loginForm");
+    const loginUser = document.getElementById("loginUser");
+    const loginPass = document.getElementById("loginPass");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginError = document.getElementById("loginError");
+    const noteSection = document.getElementById("noteSection");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userGreeting = document.getElementById("userGreeting");
+    function showNoteSection(user) {
+      loginModalBg.style.display = "none";
+      noteSection.style.display = "";
+      logoutBtn.style.display = "";
+      userGreeting.style.display = "";
+      userGreeting.textContent = "Xin chào, " + user + "!";
+      // Load notes for this user
+      notes = JSON.parse(localStorage.getItem(notesKey()) || '[]');
+      renderNotes();
+    }
+    function showLogin() {
+      loginModalBg.style.display = "";
+      noteSection.style.display = "none";
+      logoutBtn.style.display = "none";
+      userGreeting.style.display = "none";
+      loginError.style.display = "none";
+      loginUser.value = "";
+      loginPass.value = "";
+      setTimeout(() => loginUser.focus(), 100);
+    }
+    function tryLogin(user, pass) {
+      // Demo: chỉ có tài khoản admin/123456
+      if (user === DEMO_ACCOUNT.username && pass === DEMO_ACCOUNT.password) {
+        localStorage.setItem(LOGIN_KEY, user);
+        showNoteSection(user);
+      } else {
+        loginError.textContent = "Sai tên đăng nhập hoặc mật khẩu!";
+        loginError.style.display = "";
+      }
+    }
+    loginBtn.onclick = function(e) {
+      e.preventDefault();
+      tryLogin(loginUser.value.trim(), loginPass.value);
+    };
+    loginPass.addEventListener('keydown', function(e) {
+      if (e.key === "Enter") {
+        tryLogin(loginUser.value.trim(), loginPass.value);
+      }
+    });
+    logoutBtn.onclick = function() {
+      localStorage.removeItem(LOGIN_KEY);
+      showLogin();
+    };
+    // Auto-login if session exists
+    const loginUserSaved = localStorage.getItem(LOGIN_KEY);
+    if (loginUserSaved) {
+      showNoteSection(loginUserSaved);
+    } else {
+      showLogin();
+    }
   </script>
 </body>
 </html>
