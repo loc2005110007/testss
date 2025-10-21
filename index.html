@@ -22,16 +22,20 @@
       color: #0070f3;
       text-shadow: 1px 1px 8px #bde0fe;
       margin-bottom: 20px;
+      text-align: center;
     }
     .note-container {
       background: #fff;
       border-radius: 12px;
       box-shadow: 0 2px 8px #bde0fe60;
-      padding: 24px;
-      width: 350px;
+      padding: 6vw 5vw;
+      width: 100%;
+      max-width: 400px;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 16px;
+      box-sizing: border-box;
     }
     textarea {
       width: 100%;
@@ -43,6 +47,7 @@
       resize: vertical;
       outline: none;
       transition: border-color .2s;
+      box-sizing: border-box;
     }
     textarea:focus {
       border-color: #0070f3;
@@ -64,7 +69,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
-      max-height: 250px;
+      max-height: 40vh;
       overflow-y: auto;
       font-size: 1rem;
     }
@@ -79,6 +84,7 @@
       align-items: flex-start;
       word-break: break-word;
       transition: background 0.2s;
+      font-size: 1rem;
     }
     ul.notes-list li:last-child {
       margin-bottom: 0;
@@ -95,6 +101,28 @@
     }
     .delete-btn:hover {
       color: #b71c1c;
+    }
+
+    /* Responsive cho mobile */
+    @media (max-width: 600px) {
+      .note-container {
+        max-width: 98vw;
+        padding: 6vw 2vw;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      textarea {
+        font-size: 1rem;
+        min-height: 60px;
+      }
+      ul.notes-list li {
+        font-size: 0.96rem;
+      }
+      button {
+        font-size: 1rem;
+        padding: 10px 0;
+      }
     }
   </style>
 </head>
