@@ -3,26 +3,154 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Xin Chào</title>
+  <title>Web Ghi Chú</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f8fafc;
       color: #22223b;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      justify-content: flex-start;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      padding-top: 40px;
     }
     h1 {
-      font-size: 3rem;
+      font-size: 2.5rem;
       color: #0070f3;
       text-shadow: 1px 1px 8px #bde0fe;
+      margin-bottom: 20px;
+    }
+    .note-container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #bde0fe60;
+      padding: 24px;
+      width: 350px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      border: 1px solid #bde0fe;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 1rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color .2s;
+    }
+    textarea:focus {
+      border-color: #0070f3;
+    }
+    button {
+      background: #0070f3;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 0;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    button:hover {
+      background: #005bb5;
+    }
+    ul.notes-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 1rem;
+    }
+    ul.notes-list li {
+      background: #e0f2fe;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      padding: 8px 12px;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      word-break: break-word;
+      transition: background 0.2s;
+    }
+    ul.notes-list li:last-child {
+      margin-bottom: 0;
+    }
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: #ff4d4f;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0 8px;
+      margin-left: 6px;
+      transition: color .2s;
+    }
+    .delete-btn:hover {
+      color: #b71c1c;
     }
   </style>
 </head>
 <body>
-  <h1>Xin Chào!</h1>
+  <h1>Web Ghi Chú</h1>
+  <div class="note-container">
+    <textarea id="noteInput" placeholder="Nhập ghi chú..."></textarea>
+    <button onclick="addNote()">Thêm ghi chú</button>
+    <ul id="notesList" class="notes-list"></ul>
+  </div>
+  <script>
+    // Lưu và tải ghi chú từ localStorage
+    let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+
+    function renderNotes() {
+      const notesList = document.getElementById('notesList');
+      notesList.innerHTML = '';
+      notes.forEach((note, idx) => {
+        const li = document.createElement('li');
+        li.textContent = note;
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '🗑️';
+        delBtn.className = 'delete-btn';
+        delBtn.title = 'Xóa ghi chú';
+        delBtn.onclick = () => deleteNote(idx);
+        li.appendChild(delBtn);
+        notesList.appendChild(li);
+      });
+    }
+
+    function addNote() {
+      const noteInput = document.getElementById('noteInput');
+      const note = noteInput.value.trim();
+      if (note) {
+        notes.unshift(note);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotes();
+        noteInput.value = '';
+      }
+    }
+
+    function deleteNote(index) {
+      notes.splice(index, 1);
+      localStorage.setItem('notes', JSON.stringify(notes));
+      renderNotes();
+    }
+
+    // Cho phép Enter + Ctrl hoặc Enter + Cmd để thêm ghi chú nhanh
+    document.getElementById('noteInput').addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        addNote();
+      }
+    });
+
+    // Hiển thị ghi chú khi tải trang
+    renderNotes();
+  </script>
 </body>
 </html>
